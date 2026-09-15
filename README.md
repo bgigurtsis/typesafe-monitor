@@ -67,6 +67,32 @@ uv run python -m scripts.check_ruff
 
 API reference: [TypeSafe System One](https://docs.typesafe.ai/api).
 
+## Measure a saved request
+
+The benchmark helper sends one JSON request and saves its exact response,
+request hash, token usage, observed model, and elapsed wall-clock seconds.
+Timing covers the HTTP request through reading the complete response body;
+it includes network overhead and excludes local file preparation. No retries
+are made. Use a new output directory for every attempt.
+
+```bash
+python -m scripts.benchmark_request --api typesafe --request request.json --output private-runs/typesafe-01 --input-usd-per-million 0.042
+python -m scripts.benchmark_request --api openrouter --request openrouter-request.json --output private-runs/openrouter-01
+```
+
+Set `TYPESAFE_API_KEY` or `OPENROUTER_API_KEY` in the environment. Each saved
+request must use its API's native schema. The helper uses fixed provider URLs.
+OpenRouter's `usage.cost` is recorded as a provider-reported charge. TypeSafe's
+cost is an estimate using returned billable input tokens and your supplied rate;
+the example rate above was supplied by the account owner. Output is currently
+free according to TypeSafe's API schema. Missing costs remain unknown, not zero.
+
+Use identical evidence and decision criteria for comparisons. Record reasoning
+settings and output limits in the requests: a Noul decision and a reasoning model
+do different amounts of work. A single call is a latency observation, not a
+stable speed benchmark. Historical transcript inputs and responses belong in
+`private-runs/`, which is ignored by Git.
+
 The pre-commit hook checks the exact staged Python content, including partially
 staged files. Ruff enables E4, E7, E9, F, B, and PLR0915, with a maximum of 50
 statements per function. Unsafe fixes are disabled, and F401, F841, and B findings
