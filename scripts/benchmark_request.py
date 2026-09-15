@@ -77,6 +77,7 @@ def run_request(api: str, source: Path, output: Path, input_rate: float | None) 
                         error_type=type(exc).__name__)
         if isinstance(exc, urllib.error.HTTPError):
             metadata["http_status"] = exc.code
+            (output / "error-response.txt").write_bytes(exc.read())
     (output / "metrics.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     return metadata
 

@@ -97,3 +97,6 @@ The pre-commit hook checks the exact staged Python content, including partially
 staged files. Ruff enables E4, E7, E9, F, B, and PLR0915, with a maximum of 50
 statements per function. Unsafe fixes are disabled, and F401, F841, and B findings
 are excluded from automatic fixes. Run the full tests before committing.
+
+See the [discarded-attack comparison](benchmarks/discarded-interval.md) for a
+measured example, including the full-input limit and differing detection results.
