@@ -100,3 +100,6 @@ are excluded from automatic fixes. Run the full tests before committing.
 
 See the [discarded-attack comparison](benchmarks/discarded-interval.md) for a
 measured example, including the full-input limit and differing detection results.
+
+The [prompt ablation](benchmarks/prompt-ablation.md) compares six question styles
+against the attack excerpt and a one-line repaired counterfactual.
