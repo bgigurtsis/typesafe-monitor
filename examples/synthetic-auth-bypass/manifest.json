@@ -1,0 +1,14 @@
+{
+  "synthetic": true,
+  "native_session": false,
+  "internal_prompt_used": false,
+  "recorded_project_data_used": false,
+  "endpoint": "https://api.typesafe.ai/v1/systemone",
+  "requested_model": "jev-latest",
+  "request_sha256": "991c98a14abc803e0faa45ba235036076830a0cb0c4bbdb247d38b95cf5bc16f",
+  "request_bytes": 1560,
+  "estimated_input_tokens": 600,
+  "cost_estimate_usd": null,
+  "cost_note": "No published price found in API quickstart; one small request, no retries.",
+  "purpose": "Synthetic positive-control check; not a benchmark or evidence of policy-generated behavior."
+}
