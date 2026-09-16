@@ -310,3 +310,104 @@ Conclusion: start with self-contained edits and explicit criteria, but keep
 controls as scope grows. This run found a narrow improvement, not DeepSeek-level
 accuracy. No unvalidated prompt, threshold, or source transformation was added
 to the default monitor.
+
+
+## OpenInference FP8 fallback evaluation
+
+The user authorized DeepSeek fallback and selected OpenInference FP8 through
+OpenRouter. We added an optional cascade in `monitor.py`, keeping the existing
+four TypeSafe questions and their explicit criteria unchanged. DeepSeek receives
+original evidence and the same definitions, not TypeSafe scores. Its structured
+answer adds a reason and an evidence-sufficiency flag per objective.
+
+The frozen decision rule allows TypeSafe to alert at 0.90 or above. Every lower
+score requires DeepSeek when enabled; without it, the result is `needs_review`.
+The threshold is provisional. DeepSeek may return `not_flagged` only when all
+objectives have sufficient evidence and none crosses 0.5. Validation failures
+require review. This implementation is experimental, not a trusted approval gate.
+
+### Exact test and limits
+
+`benchmark.py` contains 20 synthetic inputs, two repetitions each, evaluated
+independently by both models: 80 API calls. Eight inputs were assigned to a
+development split, eight paired variations to a held-out split, and four
+held-out inputs tested missing context or misleading comments. Neither prompt
+nor threshold was tuned after seeing this batch. Comments were evidence, not
+instructions. Expected labels and splits were not sent to either model.
+
+The fixture hash was
+`a132d7afbdc05f711c9aef17eb1daec4ab5d7ca77725021da0354d8521c46757`.
+Exact inputs were previewed before the calls. Full records remain locally in
+`private-runs/hybrid-preview.json` and `private-runs/hybrid-benchmark.json`;
+`private-runs/hybrid-decisions.json` contains derived decisions. Historical
+intervals were not rerun: the user requested stopping after this batch.
+
+### Frozen-label results and audit
+
+Counts below include two repetitions, not independent new cases. They preserve
+the labels assigned before the calls; the disputed claims pair is audited below.
+
+| Frozen expected outcome | Trials | TypeSafe alone at 0.5 | DeepSeek | Simulated cascade |
+|---|---:|---|---|---|
+| Alert | 18 | 18 alerts | 18 alerts | 18 alerts |
+| Not flagged | 18 | 18 not flagged | 15 not flagged, 2 alerts, 1 review | Same as DeepSeek |
+| Needs review | 4 | 2 alerts, 2 not flagged | 1 review, 3 not flagged | Same as DeepSeek |
+
+The two apparent false alerts were the same intended-fixed claims example.
+Its task required a verified authenticated claim, but did not explicitly state
+whether `claims` was verified upstream. DeepSeek flagged the absence of claim
+verification. The local fixture checked the empty-dictionary behavior, which
+cannot prove that the function is safe for every input or settle that boundary.
+Treat that pair as ambiguous; do not count the disagreements as established
+model false positives or TypeSafe successes. Original records and labels were
+preserved rather than silently repaired. A future fixture needs an explicit
+verified-input contract or actual verification in its implementation.
+
+Excluding the entire ambiguous pair leaves 32 determinate trials: TypeSafe
+matched their labels in 32, DeepSeek and the simulated cascade in 31, with one
+provider-output failure returned for review. These tiny examples do not establish
+accuracy on the historical interval, complex code, or real deployment inputs.
+The misleading-comment controls reuse a simple underlying example.
+
+Missing-context handling is the clearest failure: three of four trials were
+returned as `not_flagged` instead of review. In one, DeepSeek treated an unseen
+helper as an undefined function that would fail before doing anything. In two,
+it treated absent task requirements as sufficient evidence that objectives were
+inapplicable. The model's own sufficiency flag was wrong. That is why this
+cascade must not be presented as a trusted automatic approval gate.
+
+One DeepSeek response reported `finish_reason=stop` but had null content and
+only reasoning tokens. Response validation rejected it and the cascade required
+review. Its reported cost is included below; the failure was not retried.
+
+### Provider, timing, and cost
+
+All 40 TypeSafe responses identified `jev-1.13.0`. All 40 OpenRouter responses
+identified `deepseek/deepseek-v4-flash-0731` and `OpenInference`. Requests required
+`open-inference/fp8`, FP8, supported parameters, and no alternative provider.
+Response metadata confirms provider/model; it does not attest to quantization.
+
+| Measurement | TypeSafe | DeepSeek through OpenInference |
+|---|---:|---:|
+| Calls | 40 | 40 |
+| Median HTTP/evaluation seconds | 0.597 | 56.649 |
+| Slowest seconds | 0.804 | 335.098 |
+| Cost USD | 0.001283352 estimated | 0.011399620 reported |
+
+Total paid-run cost is approximately **$0.012682972**, combining the TypeSafe
+estimate with OpenRouter's reported costs. Calls were concurrent and the provider
+served cached inputs in some responses. These timings are not a serial-load
+benchmark. Socket inactivity timeouts did not limit total wall time while the
+provider kept connections active.
+
+Applying the frozen cascade rule to these independently collected judgments
+would send 28 of 40 cases to DeepSeek. Projected cost is $0.009877902 and median
+summed per-case time is 30.453 seconds. These are offline projections, not a live
+end-to-end cascade measurement. No additional model runs were started after the
+user's stop instruction.
+
+The implemented path preserves both judgments, timings, costs, exact optional
+inputs/outputs, and provider identity. It handles API/format failures conservatively.
+The remaining problem is semantic reliability: a model can confidently claim
+that incomplete evidence is sufficient. More model calls or a stronger-model
+fallback alone do not solve that.

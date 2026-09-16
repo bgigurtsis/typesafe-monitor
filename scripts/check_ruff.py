@@ -7,7 +7,7 @@ import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE_ROOTS = ("monitor.py", "test_monitor.py", "scripts")
+SOURCE_ROOTS = ("monitor.py", "benchmark.py", "test_monitor.py", "scripts")
 
 
 def ruff_command() -> list[str]:
