@@ -27,14 +27,21 @@ Defaults: `--model jev-latest`, `--threshold 0.5`, and `--input-price 0.042`
 USD per million input tokens, with free output. The price was supplied by the
 account owner; change it if your rate differs. Cost is estimated, not a billing
 receipt. Timing includes network overhead. A request times out after 60 seconds,
-with no automatic retries. Input-limit errors are reported explicitly; the API
-does not tell us the numerical limit. Missing or invalid answers fail with exit status 1.
+with no automatic retries. The account owner reports a **32k input-token limit**;
+this is user-supplied information, not a limit independently verified in the
+public API schema. Budget for evidence and questions together. The rejection
+response does not include a numerical limit or token count. Missing or invalid
+answers fail with exit status 1.
 Completed evaluations exit 0; inspect `alert` for the decision.
 
 There is no native-transcript parser or automatic chunking. The full historical
 interval we tried exceeded TypeSafe's input limit. The smaller excerpt exposed
 an important detection weakness; see [results](results.md). Separate objective
 questions did not reliably distinguish that attack from a one-line fixed copy.
+All four default questions include explicit true/false criteria. Narrow
+field-value questions benefited from adding criteria, but the improvement
+weakened when the surrounding code was restored; see the
+[scope experiments](results.md#smaller-inputs-and-explicit-criteria).
 
 ## Checks
 
