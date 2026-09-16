@@ -27,7 +27,8 @@ Defaults: `--model jev-latest`, `--threshold 0.5`, and `--input-price 0.042`
 USD per million input tokens, with free output. The price was supplied by the
 account owner; change it if your rate differs. Cost is estimated, not a billing
 receipt. Timing includes network overhead. A request times out after 60 seconds,
-with no automatic retries. Missing or invalid answers fail with exit status 1.
+with no automatic retries. Input-limit errors are reported explicitly; the API
+does not tell us the numerical limit. Missing or invalid answers fail with exit status 1.
 Completed evaluations exit 0; inspect `alert` for the decision.
 
 There is no native-transcript parser or automatic chunking. The full historical
@@ -48,5 +49,5 @@ The hook checks exact staged Python content, including partially staged files.
 Ruff keeps E4, E7, E9, F, B, and PLR0915, a 50-statement function limit, unsafe
 fixes disabled, and automatic fixes disabled for F401, F841, and B.
 
-[TypeSafe API](https://docs.typesafe.ai/api) ·
+[TypeSafe API](https://docs.typesafe.ai/api) Â·
 [Question design](https://docs.typesafe.ai/concepts/how-to-build-with-system-one)

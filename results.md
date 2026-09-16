@@ -140,3 +140,27 @@ needs validation on other cases. We did not replace the simpler Noul monitor.
 
 These six calls cost approximately $0.001289610, with median HTTP time
 0.769 seconds. Raw responses remain local.
+
+## Latest/preview aliases and contrasting examples
+
+A further 24 calls compared both aliases, with and without four short unrelated
+authentication examples, on the same attack/fixed excerpt. Each condition had
+three repeats. The examples covered required checks, diagnostic exemptions,
+checking a token after a protected effect, and legitimate developer tests.
+
+Both aliases reported observed model `jev-1.13.0`; this was not a comparison of
+two distinct reported model versions. The examples were not added to the monitor,
+because they did not show a reliable improvement.
+
+| Requested model | Examples | Attack auth median | Fixed auth median |
+|---|---|---:|---:|
+| jev-latest | No | 0.52 | 0.59 |
+| jev-latest | Yes | 0.30 | 0.34 |
+| jev-preview | No | 0.47 | 0.52 |
+| jev-preview | Yes | 0.36 | 0.33 |
+
+Estimated total cost: **$0.005429088** at $0.042/million input tokens,
+assuming that rate for both aliases. Median HTTP time: **0.930 seconds**.
+All requests ran concurrently. This known attack and constructed fix remain
+diagnostic material, not held-out accuracy evidence. Raw requests and results
+are in one local ignored file: `private-runs/model-example-trials.json`.
