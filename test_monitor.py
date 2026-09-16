@@ -60,7 +60,9 @@ def test_dry_run_needs_no_key(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr("sys.argv", ["monitor", str(source), "--dry-run"])
     assert monitor.main() == 0
     output = capsys.readouterr().out
-    assert json.loads(output)["dry_run"] is True
+    result = json.loads(output)
+    assert result["dry_run"] is True
+    assert result["questions"] == monitor.build_request("private evidence")["questions"]
     assert "private evidence" not in output
 
 
@@ -92,7 +94,7 @@ def test_http_payload_and_timer(monkeypatch):
 def test_http_error_does_not_expose_body(monkeypatch):
     class Opener:
         def open(self, request, timeout):
-            raise urllib.error.HTTPError(monitor.ENDPOINT, 401, "secret", {}, None)
+            raise urllib.error.HTTPError(monitor.ENDPOINT, 401, "secret", {}, io.BytesIO(b"secret"))
 
     monkeypatch.setattr(monitor.urllib.request, "build_opener", lambda handler: Opener())
     with pytest.raises(RuntimeError, match="^TypeSafe returned HTTP 401$"):
@@ -101,3 +103,24 @@ def test_http_error_does_not_expose_body(monkeypatch):
 
 def test_redirect_is_refused():
     assert monitor.NoRedirect().redirect_request(None, None, 302, "", {}, "https://other") is None
+
+
+@pytest.mark.parametrize("body", [
+    b'{"detail":{"error_type":"max_tokens_exceeded"}}',
+    b'{"detail":"private error text"}',
+    b'["unexpected shape"]',
+])
+def test_input_limit_error_is_safe_and_specific(monkeypatch, body):
+    class Opener:
+        def open(self, request, timeout):
+            raise urllib.error.HTTPError(monitor.ENDPOINT, 400, "private", {}, io.BytesIO(body))
+
+    monkeypatch.setattr(monitor.urllib.request, "build_opener", lambda handler: Opener())
+    with pytest.raises(RuntimeError) as error:
+        monitor.evaluate(monitor.build_request("evidence"), "test-key")
+    message = str(error.value)
+    if b"max_tokens_exceeded" in body:
+        assert "max_tokens_exceeded" in message
+        assert "did not report its limit" in message
+    else:
+        assert message == "TypeSafe returned HTTP 400"

@@ -86,6 +86,14 @@ def evaluate(payload: dict, key: str) -> tuple[dict, float]:
         elapsed = time.perf_counter() - started
         return json.loads(raw), elapsed
     except urllib.error.HTTPError as exc:
+        try:
+            error = json.load(exc)
+        except (ValueError, OSError, TypeError):
+            error = {}
+        detail = error.get("detail", {}) if isinstance(error, dict) else {}
+        if isinstance(detail, dict) and detail.get("error_type") == "max_tokens_exceeded":
+            raise RuntimeError("TypeSafe input limit exceeded (max_tokens_exceeded); "
+                               "use a shorter input. The API did not report its limit.") from None
         raise RuntimeError(f"TypeSafe returned HTTP {exc.code}") from None
     except (urllib.error.URLError, TimeoutError, OSError):
         raise RuntimeError("TypeSafe connection failed or timed out") from None
@@ -144,7 +152,7 @@ def main() -> int:
             raise ValueError("Evidence must be nonempty text, an object, or an array")
         payload = build_request(evidence, args.model)
         if args.dry_run:
-            result = {"dry_run": True, "model": args.model, "questions": QUESTIONS}
+            result = {"dry_run": True, "model": args.model, "questions": payload["questions"]}
         else:
             key = os.environ.get("TYPESAFE_API_KEY", "").strip()
             if not key:
