@@ -107,3 +107,36 @@ This is one known attack and a constructed fix. Targeted questions already know
 where to look; shortening also changes wording. Do not treat these results as
 held-out accuracy, calibrated probabilities, or a validated safety gate.
 Exact historical evidence and old run records remain local and Git-ignored.
+
+## Worked-example review
+
+The [guardrail example](https://docs.typesafe.ai/cookbooks/llm_guardrails) combines
+separate Noul hazard questions with a graded Score and application-controlled
+review/block thresholds. It classifies messages, not executable code paths.
+The [parallel-question example](https://docs.typesafe.ai/cookbooks/parallel_questions)
+demonstrates batching for cost and latency; our four-objective request already
+uses that pattern.
+
+The [extraction cascade](https://docs.typesafe.ai/cookbooks/sde_cascade) uses TypeSafe
+to verify individual extracted fields, escalating flagged records to a stronger
+reasoning model. It does not demonstrate discovery of multi-function code bugs.
+The [Choice consistency example](https://docs.typesafe.ai/cookbooks/consistency_choice_cookbook)
+uses an abstention threshold; its consistency results are not correctness results.
+
+We tested two new answer types together on the same attack/fixed excerpt, three
+repeats each: Choice with protected/bypass/insufficient-context options, and a
+four-level Score ranging from no evidence (0) to a visible reachable bypass (3).
+
+| Output | Attack | Fixed |
+|---|---:|---:|
+| Choice result | protected, all 3 runs | protected, all 3 runs |
+| Median probability assigned to bypass | 0.28 | 0.28 |
+| Median evidence Score, 0–3 | 0.79 | 1.14 |
+
+Neither improved separation. Choice confidence ranged from 0.48 to 0.58 across
+both conditions, so a suitably chosen review policy could defer these cases;
+that changes routing, not whether the model recognizes the bug. Such a threshold
+needs validation on other cases. We did not replace the simpler Noul monitor.
+
+These six calls cost approximately $0.001289610, with median HTTP time
+0.769 seconds. Raw responses remain local.
